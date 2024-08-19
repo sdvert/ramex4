@@ -6395,11 +6395,11 @@ def main_menu():
     elif a == 10:
         ramexonline()
     elif a == 11:
-        url = 'https://t.me/leadsstoreejvbots'
+        url = 'https://t.me/repasss_bot'
         webbrowser.open(url)
         print('Para selecionar mais opções, abra o script novamente', url)
     elif a == 12:
-        url = 'https://www.youtube.com/watch?v=YikaaFqftYg'
+        url = 'https://www.leadsstore.me'
         webbrowser.open(url)
         print('Para selecionar mais opções, abra o script novamente', url)
     elif a == 13:
