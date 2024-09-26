@@ -6356,18 +6356,17 @@ def main_menu():
     print(Style.BRIGHT + Fore.CYAN+'   [25] Sair de canal ou grupo'+n)
     print(Style.BRIGHT + Fore.CYAN+'   [26] Logar números pelo arquivo phone.csv (Para usuários avançados)'+n)
     print(Style.BRIGHT + ye+'       Opções avançadas e Especiais:'+n)
-    print(' '+Style.BRIGHT + Fore.GREEN + Back.RED+'[27] Adicionar Membros por nome de cidade ou Longitude e Latitude'+n)
+    print(' '+Style.BRIGHT + Fore.GREEN + Back.RED+'[27] Compre Membros para INSTAGRAM, LIKES e VIEWS'+n)
     print(' '+Style.BRIGHT + Fore.GREEN + Back.RED+'[28] Operações e opções Ultra avançadas'+n)
     print(' '+Style.BRIGHT + Fore.GREEN + Back.RED+'[29] Adicionar membros por número de telefone'+n)
     print(' '+Style.BRIGHT + Fore.GREEN + Back.RED+'[30] Fazer Login Avançado de contas - Safe Login'+n)
     print(' '+Style.BRIGHT + Fore.GREEN + Back.RED+'[31] Encaminhador do Telegram'+n)
     print(' '+Style.BRIGHT + Fore.GREEN + Back.RED+'[32] Adicionar membros masculinos ou femininos'+n)
     print(Style.BRIGHT + ye+'      Extra Options:'+n)
-    print(Style.BRIGHT + Fore.CYAN+'   [33] Opção não utilizada'+n)
     print(Style.BRIGHT + Fore.CYAN+'   [34] Gerar visualizações tipo 2'+n)
     print(Style.BRIGHT + Fore.CYAN+'   [35] Criar grupo automaticamente'+n)
     print(Style.BRIGHT + Fore.CYAN+'   [36] Clonar chat de grupo'+n)
-    print(Style.BRIGHT + Fore.CYAN+'   [37] Veficiar limitações nas contas/e tentar remover'+n)
+    print(Style.BRIGHT + Fore.CYAN+'   [37] Verificar limitações nas contas/e tentar remover'+n)
     print(Style.BRIGHT + Fore.CYAN+'   [38] verificar informação de conta'+n)
     print(Style.BRIGHT + ye+'      Exit:'+n)
     print(Style.BRIGHT + Fore.CYAN+'   [0]  sair'+n)
@@ -6395,7 +6394,7 @@ def main_menu():
     elif a == 10:
         ramexonline()
     elif a == 11:
-        url = 'https://t.me/repasss_bot'
+        url = 'https://api.whatsapp.com/send?phone=5584998493595'
         webbrowser.open(url)
         print('Para selecionar mais opções, abra o script novamente', url)
     elif a == 12:
@@ -6431,7 +6430,9 @@ def main_menu():
     elif a == 26:
         loginbycsv()
     elif a == 27:
-        nearbyadder()
+        url = 'https://www.leadsstore.me'
+        webbrowser.open(url)
+        print('Para selecionar mais opções, abra o script novamente', url)
     elif a == 28:
         opthree()
     elif a == 29:
@@ -6443,7 +6444,9 @@ def main_menu():
     elif a == 32:
         addusinggendert()
     elif a == 33:
-        csvblankremover()
+        url = 'https://www.leadsstore.me'
+        webbrowser.open(url)
+        print('Para selecionar mais opções, abra o script novamente', url)
     elif a == 34:
         viewsincrement()
     elif a == 35:
