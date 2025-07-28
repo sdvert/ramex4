@@ -6059,38 +6059,167 @@ def viewsincrement():
 
 def autogroupmaker():
 
-    phone_numbers = []
+    channel_input = input(f"{INPUT}{Style.BRIGHT + cy} Digite o username do canal (sem @) ou o link completo do canal: {re}").strip()
+    
+    # Extrai o username do canal
+    match = re.search(r'(t\.me/|telegram\.me/)([\w\d_]+)', channel_input)
+    if match:
+        channel_name = match.group(2)
+    else:
+        channel_name = channel_input
 
+    try:
+        max_posts = int(input(f"{INPUT}{Style.BRIGHT + cy} Digite o número máximo de postagens a serem verificadas: {re}"))
+    except ValueError:
+        print(f"{re}Valor inválido. Usando 20 postagens como padrão.{n}")
+        max_posts = 20
+
+    target_group = input(f"{INPUT}{Style.BRIGHT + cy} Digite o USERNAME do grupo que você vai adicionar os membros (público ou privado): {re}").strip()
+    delay = int(input(f"{INPUT}{Style.BRIGHT + cy} Digite o delay em segundos entre adições (0 para sem delay): {re}"))
+    max_members = int(input(f"{INPUT}{Style.BRIGHT + cy} Digite quantos membros adicionar por conta (máximo 50): {re}"))
+
+    # === CARREGA AS CONTAS ===
+    phones = []
     with open('phone.csv', 'r') as f:
-        csv_reader = csv.reader(f)
-        phone_numbers = [row[0] for row in csv_reader]
+        csv_reader = reader(f)
+        for row in csv_reader:
+            phones.append(row[0])
+    
+    print(f"{gr}Total de contas: {n}{str(len(phones))}{n}")
 
-    def create_groups(client, phone):
-        while True:
-            username = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(12))
+    # === COLETA MEMBROS QUE COMENTARAM ===
+    commenters = set()
+    print(f"{gr}[*] Coletando membros que comentaram no canal...{n}")
+
+    async def collect_commenters(phone):
+        try:
+            async with TelegramClient(f'sessions/{phone}', api_id, api_hash, phone_number=phone) as client:
+                print(f"{gr}[✔] Conectado com {phone}{n}")
+                
+                try:
+                    channel = await client.get_entity(channel_name)
+                except Exception as e:
+                    print(f"{re}Erro ao acessar o canal: {e}{n}")
+                    return
+
+                # Itera sobre as postagens
+                async for post in client.iter_messages(channel, limit=max_posts):
+                    if not post.id:
+                        continue
+
+                    # Obtém os comentários
+                    async for comment in client.iter_messages(channel, reply_to=post.id):
+                        if comment.sender and comment.sender.username:
+                            user_id = comment.sender_id
+                            username = comment.sender.username
+                            commenters.add((user_id, username))
+                            print(f"{gr}Coletado: {username} ({user_id}){n}")
+
+        except Exception as e:
+            print(f"{re}Erro na conta {phone}: {e}{n}")
+
+    # Executa a coleta para todas as contas
+    for phone in phones:
+        try:
+            await collect_commenters(phone)
+        except:
+            continue
+
+    if not commenters:
+        print(f"{re}Nenhum comentário foi coletado.{n}")
+        return
+
+    print(f"{gr}[*] Total de membros coletados: {len(commenters)}{n}")
+
+    # === ADICIONA MEMBROS AO GRUPO ===
+    added_members = set()
+    existing_members = set()
+
+    async def get_existing_members(phone):
+        async with TelegramClient(f'sessions/{phone}', api_id, api_hash, phone_number=phone) as client:
             try:
-                print(f"criando grupo {username} com a conta: {phone}")
-                client.create_supergroup(username)
-            except FloodWait as e:
-                print(f'Tem flood na conta, vamos mudar para a proxima conta: {phone}. mudando.')
-                return
+                target_group_entity = await client.get_entity(target_group)
+                async for member in client.get_chat_members(target_group_entity):
+                    existing_members.add(member.user.id)
             except Exception as e:
-                print(f'Error: {e}')
+                print(f"{re}Erro ao verificar membros existentes: {e}{n}")
+
+    # Verifica membros existentes no grupo alvo
+    if phones:
+        await get_existing_members(phones[0])
+
+    async def add_members(phone):
+        added_count = 0
+        flood_errors = 0
+        peer_errors = 0
+        banned_errors = 0
+
+        async with TelegramClient(f'sessions/{phone}', api_id, api_hash, phone_number=phone) as client:
+            print(f"{gr}[*] Usando conta {phone} para adicionar membros{n}")
+
+            try:
+                await client.join_chat(target_group)
+            except errors.UserAlreadyParticipantError:
+                pass
+            except Exception as e:
+                print(f"{re}Erro ao entrar no grupo: {e}{n}")
                 return
 
-    for phone_number in phone_numbers:
-        client = Client(f'sessions/{phone_number}', api_id, api_hash, phone_number=phone_number)
+            target_group_entity = await client.get_entity(target_group)
 
-        print(f"Logando com a conta: {phone_number}")
-        client.start()
+            for user_id, username in commenters:
+                if added_count >= max_members:
+                    print(f"{gr}[*] Limite de {max_members} membros por conta atingido{n}")
+                    break
 
-        create_groups(client, phone_number)
+                if user_id in existing_members or user_id in added_members:
+                    continue
 
-        client.stop()
+                try:
+                    user_entity = await client.get_entity(user_id)
+                    await client.add_chat_members(target_group_entity, [user_entity])
+                    added_members.add(user_id)
+                    added_count += 1
+                    print(f"{gr}[+] Adicionado: {username} ({user_id}){n}")
+                    
+                    if delay > 0:
+                        await asyncio.sleep(delay)
 
-    print('tarefa completada.')
-    print('digite enter para sair.')
-    input()
+                except errors.UserPrivacyRestrictedError:
+                    print(f"{re}[!] {username} tem privacidade ativada{n}")
+                except errors.PeerFloodError:
+                    peer_errors += 1
+                    print(f"{re}[!] Erro de Peer Flood - pausando conta{n}")
+                    if peer_errors >= 3:
+                        break
+                    await asyncio.sleep(random.randint(10, 20))
+                except errors.FloodWaitError as e:
+                    flood_errors += 1
+                    print(f"{re}[!] Erro de Flood - esperando {e.seconds} segundos{n}")
+                    if flood_errors >= 3:
+                        break
+                    await asyncio.sleep(e.seconds + 5)
+                except errors.UserBannedInChannelError:
+                    banned_errors += 1
+                    print(f"{re}[!] Conta banida temporariamente{n}")
+                    if banned_errors >= 3:
+                        break
+                    await asyncio.sleep(random.randint(30, 60))
+                except Exception as e:
+                    print(f"{re}[!] Erro ao adicionar {username}: {e}{n}")
+
+    # Executa a adição para todas as contas
+    for phone in phones:
+        try:
+            await add_members(phone)
+        except Exception as e:
+            print(f"{re}Erro na conta {phone}: {e}{n}")
+            continue
+
+    print(f"{gr}[*] Processo finalizado! Total de membros adicionados: {len(added_members)}{n}")
+
+# Executa a função principal
+asyncio.run(collect_and_add_members())
 
 def groupchatcloner():
 
@@ -6364,7 +6493,7 @@ def main_menu():
     print(' '+Style.BRIGHT + Fore.GREEN + Back.RED+'[32] Adicionar membros masculinos ou femininos'+n)
     print(Style.BRIGHT + ye+'      Extra Options:'+n)
     print(Style.BRIGHT + Fore.CYAN+'   [34] Gerar visualizações tipo 2'+n)
-    print(Style.BRIGHT + Fore.CYAN+'   [35] Criar grupo automaticamente'+n)
+    print(Style.BRIGHT + Fore.CYAN+'   [35] Extração e adição de membros de CANAIS'+n)
     print(Style.BRIGHT + Fore.CYAN+'   [36] Clonar chat de grupo'+n)
     print(Style.BRIGHT + Fore.CYAN+'   [37] Verificar limitações nas contas/e tentar remover'+n)
     print(Style.BRIGHT + Fore.CYAN+'   [38] verificar informação de conta'+n)
