@@ -6364,7 +6364,7 @@ def main_menu():
     print(' '+Style.BRIGHT + Fore.GREEN + Back.RED+'[32] Adicionar membros masculinos ou femininos'+n)
     print(Style.BRIGHT + ye+'      Extra Options:'+n)
     print(Style.BRIGHT + Fore.CYAN+'   [34] Gerar visualizações tipo 2'+n)
-    print(Style.BRIGHT + Fore.CYAN+'   [35] Extração e adição de membros de CANAIS'+n)
+    print(Style.BRIGHT + Fore.CYAN+'   [35] Criar grupo rápido automaticamente'+n)
     print(Style.BRIGHT + Fore.CYAN+'   [36] Clonar chat de grupo'+n)
     print(Style.BRIGHT + Fore.CYAN+'   [37] Verificar limitações nas contas/e tentar remover'+n)
     print(Style.BRIGHT + Fore.CYAN+'   [38] verificar informação de conta'+n)
